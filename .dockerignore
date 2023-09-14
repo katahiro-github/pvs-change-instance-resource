@@ -1,6 +1,8 @@
 node_modules/
 Dockerfile
-.env
+.env*
+.gitignore
+.git/
 .npmrc
 *.yaml
 README.md
