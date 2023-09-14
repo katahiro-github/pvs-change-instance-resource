@@ -1,0 +1,7 @@
+version: "3"
+services:
+  pvs-resorce-change:
+    build: .
+    image: pvs-resorce-change
+    env_file:
+      - .env

@@ -1,0 +1,18 @@
+{
+  "name": "pvs-change-instance-resource",
+  "version": "1.0.0",
+  "description": "Application for change Power Virtual Server resources",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+		"node": ">=18.0.0"
+	},
+  "author": "Hiroki Kataoka",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "log4js": "^6.9.1"
+  }
+}
