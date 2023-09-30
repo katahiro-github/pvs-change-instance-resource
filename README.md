@@ -44,9 +44,6 @@ Please keep in mind that changes may fail due to the following reasons.
   - https://iam.cloud.ibm.com/
   - https://PVS_REGION.power-iaas.cloud.ibm.com/
 
-## Install
-```npm install```
-
 ## setup
 - `.env.sample` を `.env` にコピーする<br>Copy `.env.sample` to `.env`
     ```
