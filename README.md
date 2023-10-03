@@ -38,6 +38,25 @@ Please keep in mind that changes may fail due to the following reasons.
 - There are no resources available to allocate the requested resources to the actual machine where the instance exists.
 - The tool execution environment is not connected to the required network environment
 
+## Release note
+When using [Docker images](https://hub.docker.com/r/hiroapps/pvs-resorce-change/tags), please use this version of the tag
+> ## 1.1.0 (03/10/2023)
+> 
+> #### Functional Enhancements:
+> 
+> - Added process to check whether host resource capacity is free.
+> 
+> #### Bug Fixes:
+> 
+> - Fixed error in message ID in app.js
+> ## 1.0.0 (29/09/2023)
+> 
+> #### Functional Enhancements:
+> 
+> - Initial release
+> 
+
+
 ## Requirement
 - Node.js version 18 or higher
 - インターネット上の以下のエンドポイントに通信可能 / Can communicate with the following endpoints on the Internet
@@ -105,6 +124,7 @@ C:\node-apps\>npm start
   |---|---|---|
   |W000|正常ではないが、継続処理可能<br>Not normal, but can continue processing|N/A|
   |W001|指定されたリソースサイズと、対象インスタンスの現在のリソースサイズが一致<br>The specified resource size matches the current resource size of the target instance.|N/A|
+  |W002|対象インスタンスが稼働するホストのキャパシティ情報が取得できなかったため、キャパシティに関係なく後続処理を実施<brBecause capacity information of the host on which the target instance is running could not be obtained, subsequent processing was performed regardless of capacity.|N/A|
   ||
 
 - Error Log
@@ -122,6 +142,7 @@ C:\node-apps\>npm start
   |E103|Power Virtual Serverのインスタンス一覧取得API呼び出しリクエストがhttpステータス200以外で応答された<br>Power Virtual Server instance list acquisition API call request was responded with http status other than 200|APIキーが対象のPower Virtual Serverのインスタンス一覧にアクセス可能か確認<br>Check if the API key can access the target Power Virtual Server instance list|
   |E104|Power Virtual Serverのインスタンス情報取得API呼び出しリクエストがhttpステータス200以外で応答された<br>Power Virtual Server instance information retrieval API call request was responded with http status other than 200|APIキーが対象のPower Virtual Serverのインスタンスにアクセス可能か確認<br>Check if the API key can access the target Power Virtual Server instance|
   |E105|Power Virtual Serverのインスタンスリソースサイズ変更API呼び出しリクエストがhttpステータス200、202以外で応答された<br>Power Virtual Server instance resource resizing API call request responded with http status other than 200, 202|APIキーが対象のPower Virtual Serverのインスタンスへの変更権限があるか確認<br>Check if the API key has permission to change the target Power Virtual Server instance|
+  |E106|Power Virtual Serverのシステムプール参照API呼び出しリクエストがhttpステータス200以外で応答された<br>Power Virtual Server system pool reference API call request responded with http status other than 200|APIキーが対象のPower Virtual Serverのシステムプールの参照権限があるか確認<br>Check if the API key has permission to view the target Power Virtual Server system pool|
   ||
   |`E2xx` |API応答内容エラー(必須情報が参照できない等)<br>API response content error (required information cannot be referenced, etc.)|
   |E201|アクセストークン生成リクエストの応答にアクセストークンが含まれていない<br>Access token is not included in the response of access token generation request|APIキーが失効されていないか、またIBM CloudのIAM認証にエラーが発生していないか確認<br>Check if the API key has been revoked or if there are any errors with IBM Cloud IAM authentication|
@@ -129,6 +150,7 @@ C:\node-apps\>npm start
   |`E3xx` |Power Virtual Serverインスタンス状態エラー<br>Power Virtual Server instance state error|
   |E301|対象インスタンスが表示された時間中リソース変更要求を受けられる状態ではなかった<br>The target instance was not in a state where it could receive resource change requests during the displayed time.|対象のPower Virtual Serverのインスタンスが正常に起動しているか、IBM Cloudに問題が発生していないか確認<br>Check whether the target Power Virtual Server instance has started normally and whether there are any problems with IBM Cloud.|
   |E302|リソース変更要求を実行した後に対象インスタンスが表示された時間内にリソース変更が確認できなかった<br>The resource change could not be confirmed within the time the target instance was displayed after executing the resource change request.|対象のPower Virtual Serverのインスタンスが正常に起動しているか、IBM Cloudに問題が発生していないか確認<br>Check whether the target Power Virtual Server instance has started normally and whether there are any problems with IBM Cloud.|
+  |E303|リソース変更対象のインスタンスが稼働するホストにリソースのキャパシティが無い<br>There is no resource capacity on the host where the instance to be changed is running.|メッセージ内容に従って、必要に応じてCaseでインスタンスのマイグレーションを依頼する<br>According to the message content, request instance migration using Case as necessary.|
   ||
   |`E9xx` |API実行エラー(予期しないエラー)<br>API execution error (unexpected error)|
   |E901|アクセストークン生成リクエストがhttpステータス200以外で応答され、アクセストークンが生成できない。その原因確認途中で予期しないエラーが発生<br>Access token generation request is responded with http status other than 200 and access token cannot be generated. An unexpected error occurred while checking the cause.|APIキーが失効されていないか、またその文字列に誤りが無いか確認。また実行環境とIBM Cloudとの間にネットワークトラブルが発生していないか確認<br>Check that the API key has not been revoked and that there are no errors in the string. Also check if there are any network problems between the execution environment and IBM Cloud.|
@@ -136,6 +158,7 @@ C:\node-apps\>npm start
   |E903|Power Virtual Serverのインスタンス一覧取得API呼び出しリクエストがhttpステータス200以外で応答された。その原因確認途中で予期しないエラーが発生<br>The Power Virtual Server instance list acquisition API call request was responded with an http status other than 200. An unexpected error occurred while checking the cause.|APIキーが対象のPower Virtual Serverのインスタンス一覧にアクセス可能か確認。また実行環境とIBM Cloudとの間にネットワークトラブルが発生していないか確認<br>Check whether the API key can access the target Power Virtual Server instance list. Also check if there are any network problems between the execution environment and IBM Cloud.|
   |E904|Power Virtual Serverのインスタンス情報取得API呼び出しリクエストがhttpステータス200以外で応答された。その原因確認途中で予期しないエラーが発生<br>A Power Virtual Server instance information acquisition API call request was responded with an http status other than 200. An unexpected error occurred while checking the cause.|APIキーが対象のPower Virtual Serverのインスタンスにアクセス可能か確認。また実行環境とIBM Cloudとの間にネットワークトラブルが発生していないか確認<br>Check if the API key can access the target Power Virtual Server instance. Also check if there are any network problems between the execution environment and IBM Cloud.|
   |E905|Power Virtual Serverのインスタンスリソースサイズ変更API呼び出しリクエストがhttpステータス200、202以外で応答された。その原因確認途中で予期しないエラーが発生<br>A Power Virtual Server instance resource resizing API call request was responded with an http status other than 200 or 202. An unexpected error occurred while checking the cause.|APIキーが対象のPower Virtual Serverのインスタンスへの変更権限があるか確認。また実行環境とIBM Cloudとの間にネットワークトラブルが発生していないか確認<br>Check whether the API key has permission to change the target Power Virtual Server instance. Also check if there are any network problems between the execution environment and IBM Cloud.|
+  |E906|Power Virtual Serverのシステムプール参照API呼び出しリクエストがhttpステータス200以外で応答された。その原因確認途中で予期しないエラーが発生<br>Power Virtual Server system pool reference API call request was responded with an http status other than 200. An unexpected error occurred while checking the cause.|APIキーが対象のPower Virtual Serverのシステムプールの参照権限があるか確認。また実行環境とIBM Cloudとの間にネットワークトラブルが発生していないか確認<br>Check whether the API key has permission to view the target Power Virtual Server system pool. Also check if there are any network problems between the execution environment and IBM Cloud.|
   ||
 
 

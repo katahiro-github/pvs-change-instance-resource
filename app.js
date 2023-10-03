@@ -143,7 +143,7 @@ const pvsBaseResponseCheck = async (response) => {
       error('E102',`Response HTTP Status : ${response.status}. ${errMsg}`);
     }catch(err){
       logger.error(err);
-      error('E302',`Response HTTP Status : ${response.status}. ${fatalErrorMessage}`);
+      error('E902',`Response HTTP Status : ${response.status}. ${fatalErrorMessage}`);
     }
   }
 }
@@ -157,7 +157,7 @@ const pvsInstancesResponseCheck = async (response) => {
       error('E103',`Response HTTP Status : ${response.status}. ${errMsg}`);
     }catch(err){
       logger.error(err);
-      error('E304',`Response HTTP Status : ${response.status}. ${fatalErrorMessage}`);
+      error('E903',`Response HTTP Status : ${response.status}. ${fatalErrorMessage}`);
     }
   }
 }
@@ -209,6 +209,46 @@ const pvsInstanceJsonCheck = (json) => {
   json.memory === Number(pvsMemorySize)){
     warn('W001', `PVS current resource size matches configured parameters.`)
     process.exit(0);
+  }
+}
+
+const pvsSystemPoolResponseCheck = async (response) => {
+  if(response.status !== 200){
+    try{
+      const fatalErrorMessage = 'Something fatal error occuered in power virtual server host capacity check.';
+      const responseJson = await response.json();
+      const errMsg = responseJson.message ? responseJson.message : ( responseJson.description ? responseJson.description : fatalErrorMessage);
+      error('E106',`Response HTTP Status : ${response.status}. ${errMsg}`);
+    }catch(err){
+      logger.error(err);
+      error('E906',`Response HTTP Status : ${response.status}. ${fatalErrorMessage}`);
+    }
+  }
+}
+
+const pvsCapacityCheck = (instanceJson, systemPoolJson) => {
+  const currentCoreSize = instanceJson.processors;
+  const currentMemorySize = instanceJson.memory;
+  if(pvsCoreSize > currentCoreSize || pvsMemorySize > currentMemorySize){
+    const systemType = instanceJson.sysType;
+    const hostId = instanceJson.hostID;
+    const coreDifference = pvsCoreSize - currentCoreSize;
+    const memoryDifference = pvsMemorySize - currentMemorySize;
+    const systemsArray = systemPoolJson[`${systemType}`].systems;
+    const targetHost = systemsArray.filter(system => system.id === hostId);
+    if(targetHost.length === 0){
+      warn('W002', `The capacity information of the host(host ID:${hostId}) on which the PVS instance is running could not be obtained, but subsequent processing will be performed.`);
+      return;
+    }
+    if(targetHost[0].cores < coreDifference || targetHost[0].memory < memoryDifference){
+      const freeSpaceHosts = systemsArray.filter(system => ( system.cores >= pvsCoreSize && system.memory >= pvsMemorySize));
+      let freeSpaceInfo = "";
+      freeSpaceHosts.forEach(system => {freeSpaceInfo += `host ID:${system.id} free core:${system.cores} free memory:${system.memory}, `});
+      const migrationSuggestMessage = freeSpaceHosts.length > 0
+        ? `The hosts listed below have enough room for the requested resource size, so it is recommended to perform migration host through Case.(${freeSpaceInfo.replace(/\, $/,'')})` 
+        : `No hosts of this machine type(${systemType}) were found that can run the specified resource size in ${pvsRegion} region.`;
+      error('E303',`PVS instance's host(host ID:${hostId}) does not have enough resource capacity. ${migrationSuggestMessage}`);
+    }
   }
 }
 
@@ -283,7 +323,15 @@ const pvsUpdateInstanceJsonCheck = (json) => {
   const pvsInstanceJson = await pvsInstanceResponse.json();
   pvsInstanceJsonCheck(pvsInstanceJson);
   info('I000', `Consistency check of Parameter and PVS Instance finished`);
-  
+
+  // PVS Instance's Host Capacity Check
+  const pvsEndpointSystemPoolUrl = `${pvsEndpointBaseUrl}/system-pools`
+  const pvsSystemPoolResponse = await fetch(pvsEndpointSystemPoolUrl, pvsRequestOptions);
+  await pvsSystemPoolResponseCheck(pvsSystemPoolResponse);
+  const pvsSystemPoolJson = await pvsSystemPoolResponse.json();
+  pvsCapacityCheck(pvsInstanceJson, pvsSystemPoolJson);
+  info('I000', `Requested resource size and host capacity confirmation finished`);
+
   // PVS Instance Health Status Check
   const pvsCurrentStatus = pvsInstanceJson.health.status;
   if(pvsCurrentStatus !== 'OK'){
